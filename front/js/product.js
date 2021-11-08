@@ -83,7 +83,7 @@ response.then(function (data) {
 
             const popupConfirm = () => {
                 if (window.confirm(`Votre commande de ${choiceQuantity} ${data.name} ${choiceform} a été ajouté au panier
-            Pour consulter votre panier, cliquez sur OK`)) {
+            Pour continuer vos achats, cliquez sur OK`)) {
                     
                 }
             }
