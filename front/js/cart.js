@@ -1,6 +1,17 @@
+function noItems() {
+
+  if (productSave == null || productSave == 0) {
+    console.log(" Votre panier est vide");
+    alert("Votre panier est vide")
+
+  } else {
+    console.log("true");
+    return true;
+  }
+
+}
+
 let productSave = JSON.parse(localStorage.getItem("itemCaddy"));
-
-
 
 const itemSave = document.querySelector("#cart__items");;
 
@@ -8,7 +19,7 @@ const itemSave = document.querySelector("#cart__items");;
 if (productSave === null || productSave == 0) {
   const caddyNull = `
     <div class "containerCaddyNull">
-    <div> Le panier est vide</div>
+    <div> Votre panier est vide</div>
     </div>`
 
   itemSave.innerHTML = caddyNull;
@@ -20,7 +31,7 @@ if (productSave === null || productSave == 0) {
        
           <article class="cart__item" data-id="{product-ID}">  
               <div class="cart__item__img">
-              <img src="${productSave[j].image}" alt="Photographie d'un canapé">
+              <img src="${productSave[j].image}" alt="${productSave[j].altTxt}">
               </div>
                 <div class="cart__item__content">
                   <div class="cart__item__content__titlePrice">
@@ -63,62 +74,76 @@ for (let k = 0; k < deleteItem.length; k++) {
     event.preventDefault();
 
     let idDelete = productSave[k].id;
+    let colorDelete = productSave[k].select;
     console.log(idDelete);
 
 
-    productSave = productSave.filter((el) => el.id !== idDelete);
+    productSave = productSave.filter((el) => el.id !== idDelete || el.select !== colorDelete );
     console.log(productSave);
     localStorage.setItem("itemCaddy", JSON.stringify(productSave));
 
     alert("Ce produit a été supprimer du panier")
-    window.location.href = "cart.html";
+    location.reload();
 
 
   });
 
 }
 
-//---------total quantité--------
+function getTotals(){
 
-let totalquantity = document.querySelector("#totalQuantity");
+  // Récupération du total des quantités
+  var elemsQtt = document.getElementsByClassName('itemQuantity');
+  var myLength = elemsQtt.length,
+  totalQtt = 0;
 
-let totalProduct = []
+  for (var i = 0; i < myLength; ++i) {
+      totalQtt += elemsQtt[i].valueAsNumber;
+  }
 
-for (let p = 0; p < productSave.length; p++) {
-  let quantityItemsCaddy = productSave[p].quantity;
+  let productTotalQuantity = document.getElementById('totalQuantity');
+  productTotalQuantity.innerHTML = totalQtt;
+  console.log(totalQtt);
 
-  totalProduct.push(quantityItemsCaddy)
+  // Récupération du prix total
+  totalPrice = 0;
 
+  for (var i = 0; i < myLength; ++i) {
+      totalPrice += (elemsQtt[i].valueAsNumber * productSave[i].price);
+  }
 
-  console.log(totalProduct);
+  let productTotalPrice = document.getElementById('totalPrice');
+  productTotalPrice.innerHTML = totalPrice;
+  console.log(totalPrice);
 }
+getTotals();
 
-const calcul = (accumulator, currentValue) => accumulator + currentValue;
-const totalQuantityItems = totalProduct.reduce(calcul);
+// Modification d'une quantité de produit
+function modifyQtt() {
+  let qttModif = document.querySelectorAll(".itemQuantity");
 
-console.log(totalQuantityItems);
+  for (let k = 0; k < qttModif.length; k++){
+      qttModif[k].addEventListener("change" , (event) => {
+          event.preventDefault();
 
-totalquantity.innerHTML = totalQuantityItems;
+          //Selection de l'element à modifier en fonction de son id ET sa couleur
+          let quantityModif = productSave[k].quantity;
+          let qttModifValue = qttModif[k].valueAsNumber;
+          
+          const resultFind = productSave.find((el) => el.qttModifValue !== quantityModif);
 
+          resultFind.quantity = qttModifValue;
+          productSave[k].quantity = resultFind.quantity;
 
-//---------Montant total du panier--------
-
-let total = document.querySelector("#totalPrice")
-
-let totalItems = []
-
-for (let t = 0; t < productSave.length; t++) {
-  let priceItemsCaddy = productSave[t].price;
-
-  totalItems.push(priceItemsCaddy)
+          localStorage.setItem("itemCaddy", JSON.stringify(productSave));
+      
+          // refresh rapide
+          location.reload();
+      })
+  }
 }
+modifyQtt();
 
-const reducer = (accumulator, currentValue) => accumulator + currentValue;
-const totalPrice = totalItems.reduce(reducer, 0);
-
-console.log(totalPrice);
-
-total.innerHTML = totalPrice;
 
 
 //----------Récuperation des données du formulaire----------
@@ -138,7 +163,7 @@ btnOrder.addEventListener("click", (e) => {
     email: document.querySelector("#email").value
 
   }
- 
+
 
   //------validation du formulaire--------
   const textAlert = (value) => {
@@ -233,67 +258,69 @@ btnOrder.addEventListener("click", (e) => {
     };
   }
 
-
-
-
-  if (firstNameControl() && NameControl() && cityControl() && adressControl() && emailControl()) {
-    localStorage.setItem("formulaireValues", JSON.stringify(contact));
-  } else {
-    alert("Veuillez bien remplir le formulaire")
-  }
-
+  
   let products = [];
-  for (let l = 0; l < productSave.length; l++) {
+
+  if(noItems()== false) {
+  for (let l = 0; l < productSave.length; l++) {noItems()
     let productId = productSave[l].id;
     products.push(productId)
 
+  }
   };
-
-
   const infoSend = {
     contact,
     products,
   }
 
-  // envoie de l'objet "InfoSend" vers le serveur 
-
-  let promise01 = fetch("http://localhost:3000/api/products/order", {
-    method: "POST",
-    headers: {
-      'content-type': "application/json"
-    },
-    mode: "cors",
-    body: JSON.stringify(infoSend),
-  });
-
-  promise01.then(async (response) => {
-
-    try {
-
-      const content = await response.json();
-      console.log(content);
-
-      if (response.ok) {
-
-        console.log('resultat.ok: ${response.ok}');
-
-        console.log("Id de reponse");
-        console.log(content.orderId);
-
-        localStorage.setItem("responseId", content.orderId)
-
-        window.location = "confirmation.html";
-
-      } else {
-        console.log('reponse du serveur: ${response.status');
-        alert('Probléme avec le serveur: erreur ${response.status}')
 
 
 
+  if (firstNameControl() && NameControl() && cityControl() && adressControl() && emailControl() && noItems()) {
+    localStorage.setItem("contact", JSON.stringify(contact));
+
+
+    let promise01 = fetch("http://localhost:3000/api/products/order", {
+      method: "POST",
+      headers: {
+        'content-type': "application/json"
+      },
+      mode: "cors",
+      body: JSON.stringify(infoSend),
+    });
+
+    promise01.then(async (response) => {
+
+      try {
+
+        const content = await response.json();
+        console.log(content);
+
+        if (response.ok) {
+
+          console.log('resultat.ok: ${response.ok}');
+
+          console.log("Id de reponse");
+          console.log(content.orderId);
+
+          localStorage.setItem("responseId", content.orderId)
+
+          window.location = "confirmation.html";
+          console.log("responseId");
+        } else {
+          console.log('reponse du serveur: ${response.status');
+          alert('Probléme avec le serveur: erreur ${response.status}');
+
+
+
+        }
+
+      } catch (e) {
+        console.log(e);
       }
+    });
 
-    } catch (e) {
-      console.log(e);
-    }
-  });
+  } 
+
+
 });

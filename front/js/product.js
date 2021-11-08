@@ -59,78 +59,67 @@ response.then(function (data) {
 
 
     btn_caddy.addEventListener("click", (event) => {
-        event.preventDefault()
+        event.preventDefault();
+        if (itemQuantity.value > 0 && itemQuantity.value <= 100 && itemQuantity.value != 0 && idForm.value != 0) {
 
 
-        const choiceform = idForm.value
-        const choiceQuantity = itemQuantity.value
+            const choiceform = idForm.value
+            const choiceQuantity = itemQuantity.value
 
-        let optionProduct = {
-            id: eId,
-            nameProduct: data.name,
-            price: (data.price * choiceQuantity),
-            select: choiceform,
-            quantity: choiceQuantity,
-            image: data.imageUrl,
-            color: data.colors
+            let optionProduct = {
+                id: eId,
+                nameProduct: data.name,
+                price: data.price,
+                select: choiceform,
+                quantity: choiceQuantity,
+                image: data.imageUrl,
+                color: data.colors
 
-        }
+            }
 
+            //------Enregister les infos dans le local storage--------
 
+            let productSave = JSON.parse(localStorage.getItem("itemCaddy"));
 
+            const popupConfirm = () => {
+                if (window.confirm(`Votre commande de ${choiceQuantity} ${data.name} ${choiceform} a été ajouté au panier
+            Pour consulter votre panier, cliquez sur OK`)) {
+                    
+                }
+            }
 
-        //------Enregister les infos dans le local storage--------
+            if (productSave) {
+                const resultFind = productSave.find((el) => el.id === eId && el.select === idForm.value);
 
-        let productSave = JSON.parse(localStorage.getItem("itemCaddy"));
+                //Si le produit commandé est déjà dans le panier
+                if (resultFind) {
+                    let newQuantity =
+                        parseInt(resultFind.quantity) + parseInt(itemQuantity.value);
+                    resultFind.quantity = newQuantity;
+                    localStorage.setItem("itemCaddy", JSON.stringify(productSave));
+                    console.table(productSave);
+                    popupConfirm();
+                    //Si le produit commandé n'est pas dans le panier
+                } else {
 
-
-
-        const addProduct = () => {
-            productSave.push(optionProduct);
-            localStorage.setItem("itemCaddy", JSON.stringify(productSave))
-        };
-
-        if (productSave) {
-
-            addProduct();
-
-        } else {
-            productSave = [];
-            addProduct();
-
-
-            /*const updateItem = productSave.filter((el) => el.id == optionProduct.id && el.color == optionProduct.color)
-            if (updateItem != null) {
-                updateProduct();
-
+                    productSave.push(optionProduct);
+                    console.table(productSave);
+                    localStorage.setItem("itemCaddy", JSON.stringify(productSave));
+                    popupConfirm();
+                }
+                //Si le panier est vide
             } else {
                 productSave = [];
-                addProduct();
-            }*/
-
+                productSave.push(optionProduct);
+                console.table(productSave);
+                localStorage.setItem("itemCaddy", JSON.stringify(productSave));
+                popupConfirm();
+            };
 
         }
-     
-
-
-        /*$: updateProduct = () => {
-
-            let productUpdate = [];
-
-            for (let item in productSave) {
-
-                if (item.id == optionProduct.id && item.color == optionProduct.color) {
-                    item.quantity = optionProduct.quantity + item.quantity
-                }
-
-                productUpdate.push(item)
-            }
-            console.log(productUpdate);
-            localStorage.setItem("itemCaddy", JSON.stringify(productUpdate))
-        };*/
-
 
 
     });
+
 
 });
